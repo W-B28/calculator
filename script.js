@@ -1,65 +1,126 @@
-const calculator = document.querySelector('.calculator')
-const keys = calculator.querySelector('.calculator__keys')
-const display = document.querySelector('.calculator__display')
+class Calculator {
+  constructor(previousOperandTextElement, currentOperandTextElement) {
+    this.previousOperandTextElement = previousOperandTextElement
+    this.currentOperandTextElement = currentOperandTextElement
+    this.clear()
+  }
 
-keys.addEventListener('click', e => {
+  clear() {
+    this.currentOperand = ''
+    this.previousOperand = ''
+    this.operation = undefined
+  }
 
-  if (e.target.matches("button")) {
-    const key = e.target
-    const action = key.dataset.action
-    const keyContent = key.textContent
-    const displayedNum = display.textContent
+  delete() {
+    this.currentOperand = this.currentOperand.toString().slice(0, -1)
+  }
 
-    Array.from(key.parentNode.children)
-      .forEach(k => k.classList.remove('is-depressed'))
+  appendNumber(number) {
+    if (number === '.' && this.currentOperand.includes('.')) return
+    this.currentOperand = this.currentOperand.toString() + number.toString()
+  }
 
-    if (!action) {
-      if (displayedNum === '0') {
-        display.textContent = keyContent
-    } else {
-      display.textContent = displayedNum + keyContent
+  chooseOperation(operation) {
+    if (this.currentOperand === '') return
+    if (this.previousOperand !== '') {
+      this.compute()
     }
+    this.operation = operation
+    this.previousOperand = this.currentOperand
+    this.currentOperand = ''
+  }
 
-    const previousKeyType = calculator.dataset.previousKeyType
+  compute() {
+    let computation
+    const prev = parseFloat(this.previousOperand)
+    const current = parseFloat(this.currentOperand)
+    if (isNaN(prev) || isNaN(current)) return
+    switch (this.operation) {
+      case '+':
+        computation = prev + current
+        break
+      case '-':
+        computation = prev - current
+        break
+      case '*':
+        computation = prev * current
+        break
+      case '÷':
+        computation = prev / current
+        break
+      default:
+        return
+    }
+    this.currentOperand = computation
+    this.operation = undefined
+    this.previousOperand = ''
+  }
 
-    if (!action) {
-      if (displayedNum === '0' || previousKeyType === 'operator') {
-        display.textContent = keyContent
-      } else {
-        display.textContent = displayedNum + keyContent
-      }
+  getDisplayNumber(number) {
+    const stringNumber = number.toString()
+    const integerDigits = parseFloat(stringNumber.split('.')[0])
+    const decimalDigits = stringNumber.split('.')[1]
+    let integerDisplay
+    if (isNaN(integerDigits)) {
+      integerDisplay = ''
+    } else {
+      integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 })
+    }
+    if (decimalDigits != null) {
+      return `${integerDisplay}.${decimalDigits}`
+    } else {
+      return integerDisplay
     }
   }
-    if (
-    action === 'add' ||
-    action === 'subtract' ||
-    action === 'multiply' ||
-    action === 'divide'
-  ) {
-  key.classList.add('is-depressed')
-  calculator.dataset.previousKeyType = 'operator';
+
+  updateDisplay() {
+    this.currentOperandTextElement.innerText =
+      this.getDisplayNumber(this.currentOperand)
+    if (this.operation != null) {
+      this.previousOperandTextElement.innerText =
+        `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`
+    } else {
+      this.previousOperandTextElement.innerText = ''
+    }
+  }
 }
 
-  if (action === 'decimal') {
-    if (action === 'decimal') {
-    display.textContent = displayedNum + '.'
-    }
-  }
 
-  if (action === 'clear') {
-    console.log('clear key!')
-  }
+const numberButtons = document.querySelectorAll('[data-number]')
+const operationButtons = document.querySelectorAll('[data-operation]')
+const equalsButton = document.querySelector('[data-equals]')
+const deleteButton = document.querySelector('[data-delete]')
+const allClearButton = document.querySelector('[data-all-clear]')
+const previousOperandTextElement = document.querySelector('[data-previous-operand]')
+const currentOperandTextElement = document.querySelector('[data-current-operand]')
 
-  if (action === 'calculate') {
-  const firstValue = calculator.dataset.firstValue
-  const operator = calculator.dataset.operator
-  const secondValue = displayedNum
+const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement)
 
-  if (firstValue) {
-      display.textContent = calculate(firstValue, operator, secondValue)
-    }
+numberButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    calculator.appendNumber(button.innerText)
+    calculator.updateDisplay()
+  })
+})
 
-  calculator.dataset.previousKeyType = 'calculate'
-    }
-  }
-});
+operationButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    calculator.chooseOperation(button.innerText)
+    calculator.updateDisplay()
+  })
+})
+
+equalsButton.addEventListener('click', button => {
+  calculator.compute()
+  calculator.updateDisplay()
+})
+
+allClearButton.addEventListener('click', button => {
+  calculator.clear()
+  calculator.updateDisplay()
+})
+
+deleteButton.addEventListener('click', button => {
+  calculator.delete()
+  calculator.updateDisplay()
+})
