@@ -1,6 +1,7 @@
 # Calculator
 
-Learning how to build a calculator from scratch that functions similar to an iPhone calculator.
+Learning how to build a calculator from scratch that functions similar to an iPhone calculator. 
+(https://w-b28.github.io/calculator/)
 
 ## Prerequisites
 Make sure you have a decent command of JavaScript. Minimally, you need to know these things:
